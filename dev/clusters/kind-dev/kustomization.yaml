@@ -9,3 +9,4 @@ resources:
 
   # Application deployments
   - apps/bootstrap
+  - apps/console

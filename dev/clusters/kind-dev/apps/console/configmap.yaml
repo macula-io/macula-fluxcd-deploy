@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: console-config
+  namespace: macula
+data:
+  PORT: "4000"
+  PHX_HOST: "console.macula.local"
+  DATABASE_URL: "ecto://postgres:postgres@console-db:5432/macula_console"
+  POOL_SIZE: "10"

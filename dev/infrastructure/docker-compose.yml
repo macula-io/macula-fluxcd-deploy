@@ -1,0 +1,353 @@
+# Macula GitOps Infrastructure
+# Host services: Docker Registry + PowerDNS
+# These run on the host machine and provide services to KinD clusters
+
+services:
+  # ============================================================================
+  # Docker Registry - Local container registry for development
+  # ============================================================================
+  registry:
+    image: registry:2
+    container_name: macula-registry
+    restart: unless-stopped
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
+      # Security headers only (CORS handled by nginx)
+      REGISTRY_HTTP_HEADERS_X-Content-Type-Options: "[nosniff]"
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      macula-infra:
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/v2/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Registry Web UI
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: macula-registry-ui
+    restart: unless-stopped
+    environment:
+      REGISTRY_TITLE: Macula Container Registry
+      REGISTRY_URL: /
+      DELETE_IMAGES: "true"
+      SHOW_CONTENT_DIGEST: "true"
+      NGINX_PROXY_PASS_URL: http://registry:5000
+      SINGLE_REGISTRY: "true"
+      SHOW_CATALOG_NB_TAGS: "true"
+      CATALOG_MIN_BRANCHES: 1
+      CATALOG_MAX_BRANCHES: 1
+      TAGLIST_PAGE_SIZE: 100
+      REGISTRY_SECURED: "false"
+      CATALOG_ELEMENTS_LIMIT: 1000
+    networks:
+      macula-infra:
+    depends_on:
+      registry:
+        condition: service_healthy
+
+  # Nginx ingress for all services
+  nginx-ingress:
+    image: nginx:alpine
+    container_name: macula-nginx-ingress
+    restart: unless-stopped
+    ports:
+      - "80:80"     # HTTP for all services via host-based routing
+      - "5001:5001" # Direct registry access (backward compatibility)
+    volumes:
+      - ./config/nginx/ingress.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      macula-infra:
+    depends_on:
+      - registry
+      - registry-ui
+      - powerdns
+      - powerdns-admin
+      - prometheus
+      - grafana
+      - loki
+      - tempo
+      - portal
+      - excalidraw
+      - timescaledb
+      - minio
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # PowerDNS - Dynamic DNS for .macula.local domain
+  # ============================================================================
+
+  # PostgreSQL backend for PowerDNS
+  dns-postgres:
+    image: postgres:15-alpine
+    container_name: macula-dns-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: powerdns
+      POSTGRES_USER: powerdns
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-powerdns-dev-secret}
+    volumes:
+      - dns-postgres-data:/var/lib/postgresql/data
+      - ./config/powerdns/init-schema.sql:/docker-entrypoint-initdb.d/init-schema.sql:ro
+    networks:
+      macula-infra:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U powerdns"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PowerDNS Authoritative Server
+  powerdns:
+    image: powerdns/pdns-auth-48:latest
+    container_name: macula-powerdns
+    restart: unless-stopped
+    # Ports exposed only via nginx ingress
+    volumes:
+      - ./config/powerdns/pdns.conf:/etc/powerdns/pdns.conf:ro
+    environment:
+      # PostgreSQL backend
+      PDNS_launch: gpgsql
+      PDNS_gpgsql_host: dns-postgres
+      PDNS_gpgsql_port: 5432
+      PDNS_gpgsql_dbname: powerdns
+      PDNS_gpgsql_user: powerdns
+      PDNS_gpgsql_password: ${POSTGRES_PASSWORD:-powerdns-dev-secret}
+      PDNS_gpgsql_dnssec: "yes"
+      # Network configuration
+      PDNS_local_address: "0.0.0.0,::"
+      PDNS_local_port: 53
+      # HTTP API for ExternalDNS
+      PDNS_api: "yes"
+      PDNS_api_key: ${POWERDNS_API_KEY:-macula-dev-api-key}
+      PDNS_webserver: "yes"
+      PDNS_webserver_address: "0.0.0.0"
+      PDNS_webserver_port: 8081
+      PDNS_webserver_allow_from: "0.0.0.0/0,::/0"
+      # Logging
+      PDNS_loglevel: 5
+      PDNS_log_dns_queries: "yes"
+      PDNS_log_dns_details: "yes"
+      # Performance
+      PDNS_receiver_threads: 2
+      PDNS_distributor_threads: 3
+    depends_on:
+      dns-postgres:
+        condition: service_healthy
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.10
+
+  # PowerDNS Admin Web UI
+  powerdns-admin:
+    image: ngoduykhanh/powerdns-admin:latest
+    container_name: macula-powerdns-admin
+    restart: unless-stopped
+    # Port exposed only via nginx ingress
+    environment:
+      SECRET_KEY: ${PDNS_ADMIN_SECRET_KEY:-macula-admin-dev-secret}
+      SQLALCHEMY_DATABASE_URI: postgresql://powerdns:${POSTGRES_PASSWORD:-powerdns-dev-secret}@dns-postgres/powerdns_admin
+      PDNS_API_URL: http://powerdns:8081
+      PDNS_API_KEY: ${POWERDNS_API_KEY:-macula-dev-api-key}
+      PDNS_VERSION: 4.8
+    depends_on:
+      powerdns:
+        condition: service_started
+    networks:
+      macula-infra:
+
+  # ============================================================================
+  # Observability Stack - Metrics, Logs, and Traces
+  # ============================================================================
+
+  # Prometheus - Metrics collection and storage
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: macula-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.20
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Unified dashboards for metrics, logs, and traces
+  grafana:
+    image: grafana/grafana:latest
+    container_name: macula-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://grafana.macula.local
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.21
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Loki - Log aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: macula-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./config/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.22
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Tempo - Distributed tracing
+  tempo:
+    image: grafana/tempo:latest
+    container_name: macula-tempo
+    restart: unless-stopped
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    user: "0"  # Run as root to avoid permission issues
+    volumes:
+      - ./config/tempo/tempo.yml:/etc/tempo.yaml:ro
+      - tempo-data:/tmp/tempo
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.23
+
+  # ============================================================================
+  # Development Tools
+  # ============================================================================
+
+  # Portal - Landing page for all infrastructure services
+  portal:
+    image: nginx:alpine
+    container_name: macula-portal
+    restart: unless-stopped
+    volumes:
+      - ./portal:/usr/share/nginx/html:ro
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.25
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Excalidraw - Collaborative whiteboarding
+  excalidraw:
+    image: excalidraw/excalidraw:latest
+    container_name: macula-excalidraw
+    restart: unless-stopped
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.24
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================================
+  # Data Services - Application Databases and Storage
+  # ============================================================================
+
+  # TimescaleDB - PostgreSQL with time-series extensions for applications
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: macula-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD:-timescaledb-dev-secret}
+      POSTGRES_USER: macula
+      POSTGRES_DB: macula
+      # Enable TimescaleDB extension
+      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=timescaledb"
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ./config/timescaledb/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.31
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U macula -d macula"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO - S3-compatible object storage
+  minio:
+    image: minio/minio:latest
+    container_name: macula-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BROWSER_REDIRECT_URL: http://s3-console.macula.local
+    volumes:
+      - minio-data:/data
+    networks:
+      macula-infra:
+        ipv4_address: 172.23.0.30
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  registry-data:
+  dns-postgres-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  tempo-data:
+  timescaledb-data:
+  minio-data:
+
+networks:
+  macula-infra:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+          gateway: 172.23.0.1

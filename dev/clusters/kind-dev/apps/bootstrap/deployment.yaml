@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: macula-bootstrap
+  namespace: macula
+  labels:
+    app: macula-bootstrap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: macula-bootstrap
+  template:
+    metadata:
+      labels:
+        app: macula-bootstrap
+    spec:
+      containers:
+      - name: bootstrap
+        image: localhost:5001/macula/bootstrap:latest
+        imagePullPolicy: Always
+        ports:
+        - name: quic
+          containerPort: 4433
+          protocol: UDP
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f beam.smp"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "pgrep -f beam.smp"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3

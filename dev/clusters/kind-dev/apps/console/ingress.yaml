@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: macula-console
+  namespace: macula
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: console.macula.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: macula-console
+            port:
+              number: 4000

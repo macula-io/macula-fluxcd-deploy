@@ -1,0 +1,68 @@
+# Docker Compose Override for LAN Exposure
+# Use this to share infrastructure with beam clusters on LAN
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.lan.yml up -d
+#
+# This exposes all infrastructure services on LAN IP (0.0.0.0) so that:
+# - beam00-03 k3s clusters can access registry, DNS, observability, etc.
+# - Other machines on LAN can access services
+#
+# Security: Configure firewall to allow only beam cluster subnet (192.168.1.0/24)
+
+services:
+  # Nginx Ingress - Expose on all interfaces
+  nginx-ingress:
+    ports:
+      - "0.0.0.0:80:80"      # HTTP for all services (was 127.0.0.1)
+      - "0.0.0.0:5001:5001"  # Registry direct access (was 127.0.0.1)
+
+  # PowerDNS - Expose DNS and API on LAN
+  powerdns:
+    ports:
+      - "0.0.0.0:53:53/tcp"      # DNS queries from beam clusters
+      - "0.0.0.0:53:53/udp"
+      - "0.0.0.0:8081:8081/tcp"  # HTTP API for ExternalDNS
+
+  # Prometheus - Expose for remote scraping
+  prometheus:
+    ports:
+      - "0.0.0.0:9090:9090"      # Prometheus UI and API
+
+  # Grafana - Expose dashboards on LAN
+  grafana:
+    ports:
+      - "0.0.0.0:3000:3000"      # Grafana UI
+
+  # Loki - Expose for log aggregation from beam clusters
+  loki:
+    ports:
+      - "0.0.0.0:3100:3100"      # Loki API for promtail agents
+
+  # Tempo - Expose for distributed tracing from beam clusters
+  tempo:
+    ports:
+      - "0.0.0.0:3200:3200"      # Tempo API
+      - "0.0.0.0:4317:4317"      # OTLP gRPC receiver
+      - "0.0.0.0:4318:4318"      # OTLP HTTP receiver
+
+  # Excalidraw - Expose whiteboarding tool on LAN
+  excalidraw:
+    ports:
+      - "0.0.0.0:8888:80"        # Excalidraw (avoid port 80 conflict)
+
+  # MinIO - Expose S3 API and console on LAN (Phase 3)
+  minio:
+    ports:
+      - "0.0.0.0:9000:9000"      # S3 API
+      - "0.0.0.0:9001:9001"      # MinIO Console
+
+  # TimescaleDB - Expose PostgreSQL on LAN
+  timescaledb:
+    ports:
+      - "0.0.0.0:5432:5432"      # PostgreSQL
+
+  # PowerDNS Admin - Optionally expose on LAN
+  powerdns-admin:
+    ports:
+      - "0.0.0.0:9191:9191"      # DNS Admin UI (optional)

@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: macula-arcade-peers
+  namespace: macula
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: peer1.macula.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: macula-arcade-peer1
+            port:
+              number: 4000
+  - host: peer2.macula.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: macula-arcade-peer2
+            port:
+              number: 4000

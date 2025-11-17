@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macula Infrastructure Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-category {
+            margin-bottom: 2rem;
+        }
+
+        .category-title {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .service-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .service-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 1rem;
+        }
+
+        .service-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .service-description {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .service-url {
+            font-size: 0.85rem;
+            color: #667eea;
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #f7fafc;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-operational {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        footer a {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Macula Infrastructure Portal</h1>
+            <p class="subtitle">Development Environment Services</p>
+        </header>
+
+        <!-- Phase 1: Core Infrastructure -->
+        <div class="service-category">
+            <h2 class="category-title">📦 Core Infrastructure</h2>
+            <div class="services-grid">
+                <a href="http://registry.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">🐳</div>
+                        <div class="service-name">Docker Registry</div>
+                    </div>
+                    <p class="service-description">
+                        Container image registry with web UI for managing and browsing images
+                    </p>
+                    <div class="service-url">registry.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+
+                <a href="http://dns-admin.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">🔍</div>
+                        <div class="service-name">PowerDNS Admin</div>
+                    </div>
+                    <p class="service-description">
+                        DNS zone management for *.macula.local domains
+                    </p>
+                    <div class="service-url">dns-admin.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Phase 2: Observability -->
+        <div class="service-category">
+            <h2 class="category-title">📊 Observability Stack</h2>
+            <div class="services-grid">
+                <a href="http://prometheus.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">📈</div>
+                        <div class="service-name">Prometheus</div>
+                    </div>
+                    <p class="service-description">
+                        Metrics collection and time-series database
+                    </p>
+                    <div class="service-url">prometheus.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+
+                <a href="http://grafana.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">📉</div>
+                        <div class="service-name">Grafana</div>
+                    </div>
+                    <p class="service-description">
+                        Unified dashboards for metrics, logs, and traces
+                    </p>
+                    <div class="service-url">grafana.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+
+                <a href="http://loki.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">📝</div>
+                        <div class="service-name">Loki</div>
+                    </div>
+                    <p class="service-description">
+                        Log aggregation with LogQL queries
+                    </p>
+                    <div class="service-url">loki.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+
+                <a href="http://tempo.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">🔗</div>
+                        <div class="service-name">Tempo</div>
+                    </div>
+                    <p class="service-description">
+                        Distributed tracing with OTLP support
+                    </p>
+                    <div class="service-url">tempo.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Development Tools -->
+        <div class="service-category">
+            <h2 class="category-title">🛠️ Development Tools</h2>
+            <div class="services-grid">
+                <a href="http://draw.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">✏️</div>
+                        <div class="service-name">Excalidraw</div>
+                    </div>
+                    <p class="service-description">
+                        Collaborative whiteboarding for architecture diagrams
+                    </p>
+                    <div class="service-url">draw.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Phase 3: Data Services -->
+        <div class="service-category">
+            <h2 class="category-title">💾 Data Services</h2>
+            <div class="services-grid">
+                <a href="http://s3-console.macula.local" class="service-card">
+                    <div class="service-header">
+                        <div class="service-icon">📦</div>
+                        <div class="service-name">MinIO Console</div>
+                    </div>
+                    <p class="service-description">
+                        S3-compatible object storage with web console
+                    </p>
+                    <div class="service-url">s3-console.macula.local</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+
+                <a href="#" class="service-card" onclick="alert('TimescaleDB is accessible via PostgreSQL client at postgres.macula.local:5432'); return false;">
+                    <div class="service-header">
+                        <div class="service-icon">🐘</div>
+                        <div class="service-name">TimescaleDB</div>
+                    </div>
+                    <p class="service-description">
+                        PostgreSQL with time-series extensions for applications
+                    </p>
+                    <div class="service-url">postgres.macula.local:5432</div>
+                    <span class="status-badge status-operational">Operational</span>
+                </a>
+            </div>
+        </div>
+
+        <footer>
+            <p>Macula Infrastructure Portal &mdash; Development Environment</p>
+            <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
+                Credentials: See <a href="https://github.com/macula-io/macula-gitops">macula-gitops</a> documentation
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

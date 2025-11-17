@@ -1,0 +1,17 @@
+[Unit]
+Description=Macula Port Forwarding Service
+Documentation=https://github.com/macula-io/macula-gitops
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=forking
+ExecStart=/home/rl/work/github.com/macula-io/macula-gitops/scripts/setup-port-forwarding.sh start
+ExecStop=/home/rl/work/github.com/macula-io/macula-gitops/scripts/setup-port-forwarding.sh stop
+ExecReload=/home/rl/work/github.com/macula-io/macula-gitops/scripts/setup-port-forwarding.sh restart
+Restart=on-failure
+RestartSec=10
+User=root
+
+[Install]
+WantedBy=multi-user.target

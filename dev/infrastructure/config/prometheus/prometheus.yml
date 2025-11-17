@@ -1,0 +1,77 @@
+# Prometheus Configuration for Macula Infrastructure
+# Scrapes metrics from infrastructure services and KinD cluster
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'macula-infrastructure'
+    environment: 'dev'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Docker Registry
+  - job_name: 'registry'
+    static_configs:
+      - targets: ['registry:5000']
+        labels:
+          service: 'registry'
+
+  # PowerDNS metrics (if available)
+  - job_name: 'powerdns'
+    static_configs:
+      - targets: ['powerdns:8081']
+        labels:
+          service: 'powerdns'
+
+  # Grafana
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          service: 'grafana'
+
+  # Loki
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+        labels:
+          service: 'loki'
+
+  # Tempo
+  - job_name: 'tempo'
+    static_configs:
+      - targets: ['tempo:3200']
+        labels:
+          service: 'tempo'
+
+  # Docker daemon metrics (if enabled)
+  # Enable with: "metrics-addr": "0.0.0.0:9323" in /etc/docker/daemon.json
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['172.23.0.1:9323']
+        labels:
+          service: 'docker'
+
+  # KinD cluster metrics (optional - requires cluster to be running)
+  # These will fail gracefully if KinD is not running
+  - job_name: 'kind-kubelet'
+    scheme: https
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets: []  # Add KinD node IPs here when cluster is running
+        labels:
+          cluster: 'kind-macula-dev'
+
+  # cAdvisor for container metrics (if running)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: []  # Add cAdvisor endpoint if deployed

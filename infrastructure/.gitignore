@@ -1,0 +1,12 @@
+# Environment variables
+.env
+
+# Data directories (if using local bind mounts)
+data/
+
+# Backup files
+backup/
+*.tar.gz
+
+# Docker compose override files
+docker-compose.override.yml

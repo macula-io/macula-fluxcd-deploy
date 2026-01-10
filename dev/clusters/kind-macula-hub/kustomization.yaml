@@ -8,5 +8,6 @@ resources:
   - infrastructure/external-dns
 
   # Application deployments
+  - apps/nats
   - apps/bootstrap
   - apps/console

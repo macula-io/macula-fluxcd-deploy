@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+  namespace: macula
+data:
+  nats.conf: |
+    # NATS Server Configuration for Macula Edge Node
+
+    # Server info
+    server_name: macula-nats
+
+    # Client connections
+    port: 4222
+
+    # HTTP monitoring
+    http_port: 8222
+
+    # Logging
+    debug: false
+    trace: false
+    logtime: true
+
+    # JetStream for persistence (optional, enable if needed)
+    # jetstream {
+    #   store_dir: /data/jetstream
+    #   max_mem: 256MB
+    #   max_file: 1GB
+    # }
+
+    # Allow connections without authentication for development
+    # In production, enable auth with users/nkeys
+
+    # Limits
+    max_connections: 1000
+    max_payload: 1MB
+    max_pending: 64MB
+
+    # Timeouts
+    ping_interval: 30s
+    ping_max: 3
+    write_deadline: 10s

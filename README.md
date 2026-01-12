@@ -1,4 +1,4 @@
-# Macula GitOps
+# Macula FluxCD Deploy
 
 Infrastructure as Code and GitOps configuration for the Macula platform.
 
@@ -22,12 +22,14 @@ macula-gitops/
 ### Development (`dev/`)
 
 Local development environment using:
+
 - Docker Compose for infrastructure services
 - KinD (Kubernetes in Docker) for cluster
 - FluxCD for GitOps
 - PowerDNS for `.macula.local` domain
 
 **Quick Start:**
+
 ```bash
 cd dev/infrastructure
 ./start-infrastructure.sh
@@ -41,6 +43,7 @@ See `dev/README.md` for details.
 ### Production (`prod/`)
 
 Production deployment targeting:
+
 - Beam clusters (4-node k3s)
 - External infrastructure services
 - FluxCD for GitOps
@@ -51,6 +54,7 @@ See `prod/README.md` for details.
 ## Documentation
 
 Comprehensive documentation is in `docs/`:
+
 - Architecture decisions
 - Implementation plans
 - Deployment guides

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: macula-console
+  namespace: macula
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: macula-console
+  template:
+    metadata:
+      labels:
+        app: macula-console
+    spec:
+      containers:
+      - name: console
+        image: maculacid/macula-console:latest
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 4000
+          protocol: TCP
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: PORT
+        - name: PHX_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: PHX_HOST
+        - name: DATABASE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: DATABASE_PATH
+        - name: MACULA_BOOTSTRAP_PEERS
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: MACULA_BOOTSTRAP_PEERS
+        - name: MACULA_REALM
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: MACULA_REALM
+        - name: MACULA_OFFLINE
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: MACULA_OFFLINE
+        - name: SECRET_KEY_BASE
+          valueFrom:
+            secretKeyRef:
+              name: console-secret
+              key: SECRET_KEY_BASE
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: console-data

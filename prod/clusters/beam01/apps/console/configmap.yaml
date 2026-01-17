@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: console-config
+  namespace: macula
+data:
+  PORT: "4000"
+  PHX_HOST: "beam01.lab"
+  DATABASE_PATH: "/app/data/macula_cluster.db"
+  MACULA_BOOTSTRAP_PEERS: "https://boot.macula.io:443"
+  MACULA_REALM: "io.macula"
+  MACULA_OFFLINE: "false"

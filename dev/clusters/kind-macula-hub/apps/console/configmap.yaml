@@ -15,4 +15,4 @@ data:
   MACULA_OFFLINE: "true"
   # NATS configuration for gateway bridge (non-BEAM app communication)
   NATS_URL: "nats://nats.macula.svc.cluster.local:4222"
-  NATS_ENABLED: "true"
+  NATS_ENABLED: "false"

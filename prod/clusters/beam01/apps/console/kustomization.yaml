@@ -8,3 +8,9 @@ resources:
   - configmap.yaml
   - secret.yaml
   - pvc.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: macula-console
+    path: deployment-patch.yaml

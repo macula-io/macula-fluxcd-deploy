@@ -1,0 +1,12 @@
+- op: add
+  path: /spec/template/spec/containers/0/volumeMounts/-
+  value:
+    name: projects
+    mountPath: /projects
+- op: add
+  path: /spec/template/spec/volumes/-
+  value:
+    name: projects
+    hostPath:
+      path: /bulk0/macula-projects
+      type: DirectoryOrCreate

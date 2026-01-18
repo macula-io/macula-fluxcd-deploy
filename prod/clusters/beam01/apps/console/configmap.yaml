@@ -10,3 +10,4 @@ data:
   MACULA_BOOTSTRAP_PEERS: "https://boot.macula.io:443"
   MACULA_REALM: "io.macula"
   MACULA_OFFLINE: "false"
+  NATS_ENABLED: "false"

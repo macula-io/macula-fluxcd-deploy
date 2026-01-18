@@ -52,6 +52,12 @@ spec:
             configMapKeyRef:
               name: console-config
               key: MACULA_OFFLINE
+        - name: NATS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: NATS_ENABLED
+              optional: true
         - name: SECRET_KEY_BASE
           valueFrom:
             secretKeyRef:

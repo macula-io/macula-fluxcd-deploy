@@ -4,11 +4,10 @@ metadata:
   name: macula-console
   namespace: macula
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: macula-console
   ports:
   - name: http
     port: 80
     targetPort: 4000
-    nodePort: 30600

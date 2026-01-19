@@ -13,6 +13,8 @@ data:
   # Offline mode - disable mesh connection for local testing
   # TODO: Remove this when boot.macula.io is accessible from cluster
   MACULA_OFFLINE: "true"
+  # Watch paths for macula.yml discovery
+  MACULA_WATCH_PATHS: "/projects/github.com/macula-io:/projects/github.com/beam-campus"
   # NATS configuration for gateway bridge (non-BEAM app communication)
   NATS_URL: "nats://nats.macula.svc.cluster.local:4222"
   NATS_ENABLED: "false"

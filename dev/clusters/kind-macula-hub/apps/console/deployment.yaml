@@ -11,13 +11,13 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-01-19T12:00:00Z"
+        kubectl.kubernetes.io/restartedAt: "2026-01-19T03:05:00Z"
       labels:
         app: macula-console
     spec:
       containers:
       - name: console
-        image: maculacid/macula-console:latest
+        image: maculacid/macula-console:0.2.0
         imagePullPolicy: Always
         ports:
         - name: http
@@ -54,6 +54,11 @@ spec:
             configMapKeyRef:
               name: console-config
               key: MACULA_OFFLINE
+        - name: MACULA_WATCH_PATHS
+          valueFrom:
+            configMapKeyRef:
+              name: console-config
+              key: MACULA_WATCH_PATHS
         - name: NATS_URL
           valueFrom:
             configMapKeyRef:

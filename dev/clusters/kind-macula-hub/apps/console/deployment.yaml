@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: console
-        image: maculacid/macula-console:e9f78bd
+        image: maculacid/macula-console:8c996fc
         imagePullPolicy: Always
         ports:
         - name: http
